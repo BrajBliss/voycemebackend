@@ -1,9 +1,12 @@
 // import express from 'express';
 const express = require('express');
+const docs = require('./docs');
+const swaggerUi = require('swagger-ui-express');
 const db = require('./queries');
 
 const app = express();
 app.use(express.json());
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(docs));
 
 app.get('/', db.getAllUsers);
 app.post('/register', db.addNewUser);

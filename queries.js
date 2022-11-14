@@ -15,7 +15,7 @@ const getAllUsers = (req, res) => {
 			console.log(err);
 			return res.json(err);
 		}
-		return res.json(data.rows);
+		return res.json(data.rows).status(200);
 	});
 };
 
@@ -24,7 +24,7 @@ const addNewUser = (req, res) => {
 	const values = [req.body.name];
 	pool.query(q, [...values], (err, data) => {
 		if (err) return res.json(err);
-		return res.send('User added');
+		return res.send('User added').status(201);
 	});
 };
 
@@ -33,7 +33,9 @@ const checkBalance = (req, res) => {
 	const values = [req.params.id];
 	pool.query(q, [...values], (err, data) => {
 		if (err) return res.json(err);
-		return res.json(data.rows);
+		// Check if user exists or not
+		if (data.rows.length === 0) return res.send('User does not exist.');
+		return res.send(data.rows).status(200);
 	});
 };
 
@@ -41,35 +43,56 @@ const checkBalance = (req, res) => {
 const transferCoins = (req, res) => {
 	const values = [req.params.id, req.body.id, req.body.coins];
 
-	// First make sure the sender has enough coins to make the transfer
-	const q1 = 'SELECT coins FROM public.backend WHERE id = $1';
-	pool.query(q1, [values[1]], (err, data) => {
+	// Check if receiver exists
+	const q0 = 'SELECT name FROM public.backend WHERE id = $1';
+	pool.query(q0, [values[0]], (err, data) => {
 		if (err) return res.json(err);
-		if (data.rows[0].coins < values[2])
-			return res.send(
-				'You do not have enough coins to make the transfer.'
-			);
+		if (data.rows.length === 0)
+			return res.send('Receiver does not exist.').status(404);
 
-		// Now if the sender has enough coins we will proceed with the transfer
-		const q2 = 'UPDATE public.backend SET coins = coins - $1 WHERE id = $2';
-		pool.query(q2, [values[2], values[1]], (err, data) => {
+		// Then make sure the sender has enough coins to make the transfer
+		const q1 = 'SELECT coins FROM public.backend WHERE id = $1';
+		pool.query(q1, [values[1]], (err, data) => {
 			if (err) return res.json(err);
-			const q3 =
-				'UPDATE public.backend SET coins = coins + $1 WHERE id = $2';
-			pool.query(q3, [values[2], values[0]], (err, data) => {
+			if (data.rows[0].coins < values[2])
+				return res
+					.send('You do not have enough coins to make the transfer.')
+					.status(400);
+
+			// Now if the sender has enough coins we will proceed with the transfer
+			const q2 =
+				'UPDATE public.backend SET coins = coins - $1 WHERE id = $2';
+			pool.query(q2, [values[2], values[1]], (err, data) => {
 				if (err) return res.json(err);
-				return res.send('Coins transferred successfully.');
+				const q3 =
+					'UPDATE public.backend SET coins = coins + $1 WHERE id = $2';
+				pool.query(q3, [values[2], values[0]], (err, data) => {
+					if (err) return res.json(err);
+					return res
+						.send('Coins transferred successfully.')
+						.status(200);
+				});
 			});
 		});
 	});
 };
 
 const addCoins = (req, res) => {
-	const q = 'UPDATE public.backend SET coins = coins + $1 WHERE id = $2';
 	const values = [req.body.coins, req.params.id];
-	pool.query(q, [...values], (err, data) => {
+
+	// Check if user exists
+	const q1 = 'SELECT name FROM public.backend WHERE id = $1';
+	pool.query(q1, [values[1]], (err, data) => {
 		if (err) return res.json(err);
-		return res.send('Coins added successfully.');
+		if (data.rows.length === 0)
+			return res.send('User does not exist.').status(404);
+
+		// Then proceed with adding coins
+		const q2 = 'UPDATE public.backend SET coins = coins + $1 WHERE id = $2';
+		pool.query(q2, [...values], (err, data) => {
+			if (err) return res.json(err);
+			return res.send('Coins added successfully.');
+		});
 	});
 };
 
