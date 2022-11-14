@@ -15,6 +15,16 @@ module.exports = {
 			},
 		],
 
+		requestBody: {
+			content: {
+				'application/json': {
+					schema: {
+						$ref: '#/components/schemas/AddCoins',
+					},
+				},
+			},
+		},
+
 		responses: {
 			200: {
 				description: 'Coins added successfully',

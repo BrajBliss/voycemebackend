@@ -24,7 +24,16 @@ module.exports = {
 			Register: {
 				type: 'varchar',
 				description: 'Setup user with initial coin balance 100',
-				example: 'Amay',
+				example: {
+					name: 'Amay',
+				},
+			},
+			AddCoins: {
+				type: 'integer',
+				description: 'Add more coins',
+				example: {
+					coins: 100,
+				},
 			},
 			Transfer: {
 				type: 'object',
