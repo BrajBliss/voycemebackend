@@ -1,7 +1,7 @@
 module.exports = {
 	servers: [
 		{
-			url: 'http://voycemebackend.vercel.app',
+			url: 'http://localhost:3030',
 			description: 'Local Server',
 		},
 	],
