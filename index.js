@@ -15,3 +15,5 @@ app.put('/transfer/:id', db.transferCoins);
 app.put('/addcoins/:id', db.addCoins);
 
 app.listen(3030, () => console.log('server is up and running'));
+
+module.exports = app;
